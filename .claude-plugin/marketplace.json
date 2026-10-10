@@ -1,0 +1,6 @@
+{
+  "name": "claude-mod",
+  "owner": { "name": "Andres Daza" },
+  "description": "A friendlier interface for Claude Code",
+  "plugins": [{ "name": "friendly-ui", "source": "./" }]
+}
