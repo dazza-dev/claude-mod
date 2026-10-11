@@ -98,9 +98,13 @@ With a Nerd Font installed (for example `brew install --cask font-blex-mono-nerd
 font in your terminal) the tree shows flat folder and file-type icons, and the usage and context
 indicators are drawn as pie dials. Without one, only open/close arrows and braille rings.
 
-Detection checks for an installed Nerd Font. In macOS Terminal.app it checks the tab's font and, if a
-Nerd Font is installed but the tab uses another font, switches that tab (not the profile) for the
-session. `/icons on|off|auto` fixes the choice per terminal when detection gets it wrong.
+Detection checks for an installed Nerd Font. When none is found and no `/icons` choice is saved, the
+mod installs Blex Mono Nerd Font in the background (the Homebrew cask on macOS, else the release zip
+into `~/Library/Fonts` or `~/.local/share/fonts`) and switches to icons once it is in. In macOS
+Terminal.app it checks the tab's font and, if a Nerd Font is installed but the tab uses another font,
+switches that tab (not the profile) for the session; other terminals need the font picked in their
+profile. `/icons on|off|auto` fixes the choice per terminal when detection gets it wrong; `/icons off`
+keeps later sessions from installing it.
 
 ### Terminal notes
 

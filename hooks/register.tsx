@@ -743,6 +743,31 @@ async function hasNerdFont($: $T): Promise<boolean> {
   }
 }
 
+// Installs Blex Mono Nerd Font: the Homebrew cask on macOS when brew is there, else the release zip unpacked into the user's font folder.
+const INSTALL_NERD_FONT_SH = `
+export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1
+if [ "$(uname -s)" = Darwin ]; then
+  command -v brew >/dev/null 2>&1 && brew install --cask font-blex-mono-nerd-font >/dev/null 2>&1 && exit 0
+  d="$HOME/Library/Fonts"
+else
+  d="$HOME/.local/share/fonts"
+fi
+t=$(mktemp -d) || exit 1
+mkdir -p "$d" && curl -fsSL -o "$t/f.zip" https://github.com/ryanoasis/nerd-fonts/releases/latest/download/IBMPlexMono.zip && unzip -oqj "$t/f.zip" '*.ttf' -d "$d"
+s=$?
+rm -rf "$t"
+command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$d" >/dev/null 2>&1
+exit $s
+`
+
+/** Installs a Nerd Font in the background when none is detected and no /icons choice is saved, then redraws with icons. */
+async function ensureNerdFont($: $T): Promise<void> {
+  if (nerd || (await $.store.get(await iconsKey($)))) return
+  await $.process.run(['sh', '-c', INSTALL_NERD_FONT_SH], { timeoutMs: 300_000 }).catch(() => undefined)
+  nerd = await hasNerdFont($)
+  if (nerd) await patchTree($, () => ({}))
+}
+
 /** The platform, asked of `uname` once. */
 function osName($: $T): Promise<'linux' | 'darwin'> {
   platform ??= $.process.run(['uname', '-s'], { timeoutMs: 3_000 }).then(r => (r.stdout.trim() === 'Darwin' ? 'darwin' : 'linux'), () => 'linux')
@@ -1435,7 +1460,8 @@ async function treeSessionStart($: $T): Promise<void> {
   await $.command.register({ name: 'icons', description: 'Nerd Font icons in the tree and the band; args: on | off | auto (saved per terminal)' })
   home = ((await $.env.get('HOME')) || '').replace(/\/+$/, '')
   nerd = await hasNerdFont($)
-  activityId = Math.max(activityId, ...(await activities($)).map(a => a.id))
+  void ensureNerdFont($).catch(() => undefined)
+  activityId =Math.max(activityId, ...(await activities($)).map(a => a.id))
   void (async () => {
     const t = await treeState($)
     if (t.flashOn) await patchTree($, () => ({ flash: [], flashDim: [], flashOn: false, flashTones: {} }))
@@ -2076,7 +2102,8 @@ export const register: Register = on => {
     else return { text: 'Usage: /icons on | off | auto' }
     nerd = await hasNerdFont($)
     await patchTree($, () => ({}))
-    return { text: `Nerd Font icons ${nerd ? 'on' : 'off'}${arg === 'on' || arg === 'off' ? ' for this terminal' : ' (auto-detected)'}.` }
+    if (!nerd) void ensureNerdFont($).catch(() => undefined)
+    return { text: `Nerd Font icons ${nerd ? 'on' : `off${arg === 'off' ? '' : ', installing a Nerd Font in the background'}`}${arg === 'on' || arg === 'off' ? ' for this terminal' : ' (auto-detected)'}.` }
   })
 
   on('command.run', { command: 'tree' }, async ($, e) => {
