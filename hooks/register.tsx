@@ -764,7 +764,11 @@ exit $s
 async function ensureNerdFont($: $T): Promise<void> {
   if (nerd || (await $.store.get(await iconsKey($)))) return
   await $.process.run(['sh', '-c', INSTALL_NERD_FONT_SH], { timeoutMs: 300_000 }).catch(() => undefined)
-  nerd = await hasNerdFont($)
+  // macOS takes a few seconds to list a font it just installed.
+  for (let i = 0; i < 6 && !nerd; i++) {
+    if (i) await new Promise<void>(resolve => $.clock.after(3_000, resolve))
+    nerd = await hasNerdFont($)
+  }
   if (nerd) await patchTree($, () => ({}))
 }
 
