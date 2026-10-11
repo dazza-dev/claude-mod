@@ -103,7 +103,8 @@ mod installs Blex Mono Nerd Font in the background (the Homebrew cask on macOS, 
 into `~/Library/Fonts` or `~/.local/share/fonts`) and switches to icons once it is in. In macOS
 Terminal.app it checks the tab's font and, if a Nerd Font is installed but the tab uses another font,
 switches that tab (not the profile) for the session; other terminals need the font picked in their
-profile. `/icons on|off|auto` fixes the choice per terminal when detection gets it wrong; `/icons off`
+profile. Claude Desktop and other non-terminal surfaces always use the plain arrows and rings, since they draw
+with their own font. `/icons on|off|auto` fixes the choice per terminal when detection gets it wrong; `/icons off`
 keeps later sessions from installing it.
 
 ### Terminal notes

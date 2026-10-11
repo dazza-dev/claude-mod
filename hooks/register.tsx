@@ -772,6 +772,9 @@ async function ensureNerdFont($: $T): Promise<void> {
   if (nerd) await patchTree($, () => ({}))
 }
 
+/** Whether to draw Nerd Font glyphs where `e` renders: only a terminal uses the font detection looked at. */
+const iconsIn = (e: { surface: string }): boolean => nerd && e.surface === 'terminal'
+
 /** The platform, asked of `uname` once. */
 function osName($: $T): Promise<'linux' | 'darwin'> {
   platform ??= $.process.run(['uname', '-s'], { timeoutMs: 3_000 }).then(r => (r.stdout.trim() === 'Darwin' ? 'darwin' : 'linux'), () => 'linux')
@@ -1847,6 +1850,7 @@ export const register: Register = on => {
     const agentRows = background.filter(s => s.kind === 'agent').length
     const p = await colors($)
     const { Box, Button, Text } = $.ui.resolve(e)
+    const nerd = iconsIn(e)
     const more = nerd ? ' \u{eab6}' : ' ▸'
     return (
       <Box flexDirection="column" alignItems="flex-start">
@@ -2266,6 +2270,7 @@ export const register: Register = on => {
       return <Empty />
     }
     const { Box, Text, Button, Input, Client } = $.ui.resolve(e)
+    const nerd = iconsIn(e)
     const t = await treeState($)
     const p = await artColors($)
     const tones = Object.fromEntries(TONES.map(k => [k, shades(p[k])])) as RowsProps['tones']
