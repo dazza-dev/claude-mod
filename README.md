@@ -78,7 +78,8 @@ drawn the same way.
 ### File tree in the sidebar
 
 The `Files` button above the prompt opens and closes it; `/tree`, or `/tree <path>` to pin another
-folder. It needs `/tui fullscreen` and a terminal of 110 columns or more.
+folder. It needs `/tui fullscreen` and a terminal of 110 columns or more. Terminal only: Claude
+Desktop has its own file panel.
 
 - Git status per file and folder (`+` new, `•` modified, `×` deleted, `→` renamed) with changed
   line counts, and the branch with ahead/behind at the foot.

@@ -930,8 +930,14 @@ function refreshTreeGit($: $T): Promise<void> {
   return gitNext
 }
 
-/** Opens the tree pane titled after `root`, with the keyboard when `focus`, and notes it as open for the band's button. */
+/** Whether a terminal draws this session. */
+function hasTerminal($: $T): Promise<boolean> {
+  return $.session.surfaces().then(s => s.includes('terminal'), () => true)
+}
+
+/** Opens the tree pane titled after `root`, with the keyboard when `focus`, and notes it as open for the band's button; only when a terminal draws the session. */
 async function openTree($: $T, root: string, focus: boolean): Promise<void> {
+  if (!(await hasTerminal($))) return
   openPanes.add(PANE_TREE)
   await $.ui.open({ id: PANE_TREE, title: `Files: ${root.split('/').pop() || root}`, ...(focus ? { focus: true } : {}) })
 }
@@ -1851,7 +1857,7 @@ export const register: Register = on => {
     const p = await colors($)
     const { Box, Button, Text } = $.ui.resolve(e)
     const nerd = iconsIn(e)
-    // Usage and context show only in a terminal.
+    // Files, usage and context show only in a terminal.
     const terminal = e.surface === 'terminal'
     const more = nerd ? ' \u{eab6}' : ' ▸'
     return (
@@ -1886,10 +1892,12 @@ export const register: Register = on => {
           </Box>
         )}
         <Box flexDirection="row" flexWrap="wrap" columnGap={4}>
-          <Button key="tree" plain onPress={() => void toggleTree($).catch(() => undefined)}>
-            <Text dimColor>{`${nerd ? '\u{eaf7} ' : ''}Files`}</Text>
-            <Text dimColor>{more}</Text>
-          </Button>
+          {terminal && (
+            <Button key="tree" plain onPress={() => void toggleTree($).catch(() => undefined)}>
+              <Text dimColor>{`${nerd ? '\u{eaf7} ' : ''}Files`}</Text>
+              <Text dimColor>{more}</Text>
+            </Button>
+          )}
           {terminal && windows.length > 0 && (
             <Button key="account" plain onPress={() => void togglePane($, PANE_USAGE, 'Account usage', windows.length * 3 + 2)}>
               <Text dimColor>Usage: </Text>
@@ -2123,9 +2131,9 @@ export const register: Register = on => {
   })
 
   on('command.run', { command: 'tree' }, async ($, e) => {
-    const terminal = await $.session.surfaces().then(s => s.includes('terminal'), () => true)
-    if (terminal && !e.presentation.isFullscreen) return { text: 'The tree lives in the sidebar, which needs fullscreen: run /tui fullscreen and then /tree.' }
-    if (terminal && e.presentation.columns < 110) return { text: 'The tree lives in the sidebar, which needs a terminal at least 110 columns wide. Widen it and run /tree again.' }
+    if (!(await hasTerminal($))) return { text: 'The file tree is for the terminal; Claude Desktop has its own file panel.' }
+    if (!e.presentation.isFullscreen) return { text: 'The tree lives in the sidebar, which needs fullscreen: run /tui fullscreen and then /tree.' }
+    if (e.presentation.columns < 110) return { text: 'The tree lives in the sidebar, which needs a terminal at least 110 columns wide. Widen it and run /tree again.' }
     noDock = false
     const arg = (e.args ?? '').trim()
     const cwd = await $.session.cwd()
@@ -2270,7 +2278,7 @@ export const register: Register = on => {
   })()))
 
   on('ui.render', { component: 'Pane', requestId: PANE_TREE }, async ($, e, next) => padded($, e, await (async (): Promise<RenderElement> => {
-    if (e.surface !== 'terminal' && e.surface !== 'desktop') return next(e)
+    if (e.surface !== 'terminal') return next(e)
     if (e.surface === 'terminal' && e.props.placement === 'inline') {
       noDock = true
       void $.ui.close({ id: PANE_TREE }).catch(() => undefined)
