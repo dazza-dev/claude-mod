@@ -1851,6 +1851,8 @@ export const register: Register = on => {
     const p = await colors($)
     const { Box, Button, Text } = $.ui.resolve(e)
     const nerd = iconsIn(e)
+    // Usage and context show only in a terminal.
+    const terminal = e.surface === 'terminal'
     const more = nerd ? ' \u{eab6}' : ' ▸'
     return (
       <Box flexDirection="column" alignItems="flex-start">
@@ -1888,7 +1890,7 @@ export const register: Register = on => {
             <Text dimColor>{`${nerd ? '\u{eaf7} ' : ''}Files`}</Text>
             <Text dimColor>{more}</Text>
           </Button>
-          {windows.length > 0 && (
+          {terminal && windows.length > 0 && (
             <Button key="account" plain onPress={() => void togglePane($, PANE_USAGE, 'Account usage', windows.length * 3 + 2)}>
               <Text dimColor>Usage: </Text>
               {windows.map((w, i) => (
@@ -1901,7 +1903,7 @@ export const register: Register = on => {
               <Text dimColor>{more}</Text>
             </Button>
           )}
-          {u && (
+          {terminal && u && (
             <Button key="context" plain onPress={() => void togglePane($, PANE_CONTEXT, 'Conversation context', 8)}>
               <Text dimColor>Context: </Text>
               <Text color={ring(u.contextPct, nerd).isEmpty ? p.muted : levelColor(p, lvl)}>{`${ring(u.contextPct, nerd).glyph} `}</Text>
@@ -1915,25 +1917,31 @@ export const register: Register = on => {
     )
   }).catch(($, e, next) => next(e))
 
-  on('ui.render', { component: 'PromptHint' }, async ($, e) => {
+  on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
+    const terminal = e.surface === 'terminal'
+    const cv = await read($, cave)
+    if (!terminal && (!cv || cv === 'off')) return next(e)
     const current = (await modelRow($)).value ?? (await read($, model)) ?? (await $.session.model())
     const ef = (await read($, effortPick)) ?? (await read($, effort))
     const efIndex = EFFORTS.findIndex(x => x.id === ef)
-    const cv = await read($, cave)
     const p = await colors($)
     const { Box, Button, Text } = $.ui.resolve(e)
     return (
       <Box flexDirection="row" flexWrap="wrap" columnGap={2}>
-        <Button key="model" plain onPress={() => void openPicker($, 'model')}>
-          <Text color={p.user}>{modelLabel(current)}</Text>
-          <Text dimColor> ▾</Text>
-        </Button>
-        <Button key="effort" plain onPress={() => void openPicker($, 'effort')}>
-          <Text color={p.accent}>{'▮'.repeat(efIndex + 1)}</Text>
-          <Text dimColor>{'▯'.repeat(EFFORTS.length - efIndex - 1)} </Text>
-          <Text color={p.user}>{efIndex >= 0 ? EFFORTS[efIndex]!.label : '—'}</Text>
-          <Text dimColor> ▾</Text>
-        </Button>
+        {terminal && (
+          <Button key="model" plain onPress={() => void openPicker($, 'model')}>
+            <Text color={p.user}>{modelLabel(current)}</Text>
+            <Text dimColor> ▾</Text>
+          </Button>
+        )}
+        {terminal && (
+          <Button key="effort" plain onPress={() => void openPicker($, 'effort')}>
+            <Text color={p.accent}>{'▮'.repeat(efIndex + 1)}</Text>
+            <Text dimColor>{'▯'.repeat(EFFORTS.length - efIndex - 1)} </Text>
+            <Text color={p.user}>{efIndex >= 0 ? EFFORTS[efIndex]!.label : '—'}</Text>
+            <Text dimColor> ▾</Text>
+          </Button>
+        )}
         {cv && cv !== 'off' && (
           <Text color={p.accent}>{cv === 'caveman' ? '● Caveman' : `● Caveman ${cv}`}</Text>
         )}

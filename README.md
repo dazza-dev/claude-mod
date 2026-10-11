@@ -46,7 +46,7 @@ each agent: its model, effort, context, tokens and estimated cost.
 ### Account usage and conversation context
 
 Usage (5 h, week and per-model limits) and context, each with its pane. The context pane has the
-compact button.
+compact button. Terminal only: Claude Desktop shows its own.
 
 ![The usage pane with three bars and their reset times](docs/usage.png)
 
@@ -54,7 +54,7 @@ compact button.
 
 ### Model and effort pickers
 
-Below the prompt. Click one to switch.
+Below the prompt. Click one to switch. Terminal only: Claude Desktop has its own.
 
 ![The model picker and the pickers row below the prompt](docs/pickers.png)
 

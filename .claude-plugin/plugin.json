@@ -1,6 +1,6 @@
 {
   "name": "friendly-ui",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A cleaner Claude Code interface: named messages, color themes, replies with diagrams and tables, activity, agents and shells in panes, usage and context, model and effort pickers, file tree with git status",
   "author": { "name": "Andres Daza" },
   "types": "./types/index.d.ts"
